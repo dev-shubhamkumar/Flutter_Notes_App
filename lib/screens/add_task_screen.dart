@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:flutter_todo_list/models/task_model.dart';
+import 'package:flutter_todo_list/helpers/database_helper.dart';
+
 
 class AddTaskScreen extends StatefulWidget {
+
+  final Function updateTaskList;
+  final Task task;
+  
+  // Constructor Function
+  AddTaskScreen({this.updateTaskList, this.task});
+
   @override
   _AddTaskScreenState createState() => _AddTaskScreenState();
 }
@@ -18,17 +28,24 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final DateFormat _dateFormatter = DateFormat('dd-MM-yyyy');
   final List<String> _priorities = ['Low', 'Medium', 'High'];
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _dateController.text = _dateFormatter.format(_date);
-  // }
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.task != null) {
+      _title = widget.task.title;
+      _date = widget.task.date;
+      _priority = widget.task.priority;
+    }
+
+    _dateController.text = _dateFormatter.format(_date);
+  }
   
-  // @override
-  // void dispose() {
-  //   _dateController.dispose();
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    _dateController.dispose();
+    super.dispose();
+  }
 
   _handleDatePicker() async {
     final DateTime date = await showDatePicker(
@@ -52,10 +69,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       print('$_title, $_date, $_priority');
 
       // Insert the task to our user database
+      Task task = Task(
+        title: _title,
+        date: _date,
+        priority: _priority
+      );
+      if (widget.task == null) {
+        task.status = 0;
+        DatabaseHelper.instance.insertTask(task);
+      }
+      else {
+        task.status = widget.task.status;
+        DatabaseHelper.instance.updateTask(task);
+      }
 
-      // Update the task
-
-
+      widget.updateTaskList();
       Navigator.pop(context);
     }
   }
